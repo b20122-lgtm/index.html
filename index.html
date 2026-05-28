@@ -1,1 +1,482 @@
-<!DOCTYPE html><html lang='ko'><head><meta charset='UTF-8'><title>너는 알록달록한 사람</title></head><body><h1>완성본 생성 시작 버전</h1><p>4상황×6질문 구조 포함. (파일 전달용)</p></body></html>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>너는 알록달록한 사람</title>
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+font-family:'Segoe UI',sans-serif;
+background:linear-gradient(135deg,#fdf7f2,#eef6ff);
+color:#333;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:40px 20px;
+}
+
+.card{
+background:rgba(255,255,255,0.7);
+backdrop-filter:blur(12px);
+border-radius:35px;
+padding:35px;
+box-shadow:0 10px 40px rgba(0,0,0,0.08);
+}
+
+h1{
+font-size:2.3rem;
+margin-bottom:10px;
+}
+
+.subtitle{
+color:#666;
+margin-bottom:25px;
+}
+
+.progressBox{
+background:#eee;
+height:14px;
+border-radius:20px;
+overflow:hidden;
+margin-bottom:30px;
+}
+
+.progress{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,#5dd9d3,#ffd45e);
+transition:0.3s;
+}
+
+.situation{
+font-size:1rem;
+color:#7c7c7c;
+margin-bottom:10px;
+}
+
+.question{
+font-size:1.45rem;
+line-height:1.6;
+margin-bottom:30px;
+}
+
+.sliderLabel{
+display:flex;
+justify-content:space-between;
+font-size:.95rem;
+margin-bottom:10px;
+color:#666;
+}
+
+input[type=range]{
+width:100%;
+margin-bottom:35px;
+}
+
+.btns{
+display:flex;
+justify-content:space-between;
+gap:12px;
+}
+
+button{
+padding:14px 24px;
+border:none;
+border-radius:999px;
+font-size:1rem;
+cursor:pointer;
+font-weight:600;
+}
+
+.next{
+background:linear-gradient(90deg,#56d4d8,#ffd15f);
+color:white;
+}
+
+.prev{
+background:#e9e9e9;
+}
+
+.result{
+display:none;
+}
+
+.resultCard{
+padding:25px;
+border-radius:30px;
+margin-bottom:18px;
+color:white;
+}
+
+.poem{
+font-size:1.3rem;
+font-style:italic;
+margin:12px 0;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card" id="quiz">
+
+<h1>너는 알록달록한 사람 ✦</h1>
+
+<p class="subtitle">
+MBTI는 당신을 정의하지 않아요.
+상황마다 당신의 색은 달라집니다.
+</p>
+
+<div class="progressBox">
+<div class="progress" id="progress"></div>
+</div>
+
+<div class="situation" id="situation"></div>
+
+<div class="question" id="question"></div>
+
+<div class="sliderLabel">
+<span id="left"></span>
+<span id="right"></span>
+</div>
+
+<input type="range" min="0" max="100" value="50" id="slider">
+
+<div class="btns">
+
+<button class="prev" onclick="prevQ()">
+이전
+</button>
+
+<button class="next" onclick="nextQ()">
+다음
+</button>
+
+</div>
+
+</div>
+
+<div id="result" class="result"></div>
+
+</div>
+
+<script>
+
+const questions=[
+
+{
+s:"👥 친구",
+q:"친구와 놀고 집에 가는 길.",
+l:"더 놀고 싶다",
+r:"이제 혼자 쉬고 싶다",
+type:"EI"
+},
+
+{
+s:"👥 친구",
+q:"친구가 고민을 털어놓는다.",
+l:"해결책을 먼저 찾는다",
+r:"감정을 먼저 공감한다",
+type:"TF"
+},
+
+{
+s:"👥 친구",
+q:"즉흥 여행 계획이 생겼다.",
+l:"그냥 떠난다",
+r:"계획부터 짠다",
+type:"JP"
+},
+
+{
+s:"👥 친구",
+q:"대화할 때 나는",
+l:"현실 이야기",
+r:"상상 이야기",
+type:"SN"
+},
+
+{
+s:"👥 친구",
+q:"모임에서 나는",
+l:"분위기를 이끈다",
+r:"관찰하며 듣는다",
+type:"EI"
+},
+
+{
+s:"👥 친구",
+q:"서운한 일이 생기면",
+l:"논리적으로 정리",
+r:"감정이 오래 남음",
+type:"TF"
+},
+
+{
+s:"🏫 학교",
+q:"팀플 과제를 시작한다.",
+l:"바로 행동",
+r:"계획 세우기",
+type:"JP"
+},
+
+{
+s:"🏫 학교",
+q:"수업시간 나는",
+l:"현실 적용",
+r:"아이디어 상상",
+type:"SN"
+},
+
+{
+s:"🏫 학교",
+q:"발표 시간",
+l:"말하면서 에너지",
+r:"긴장하고 조용함",
+type:"EI"
+},
+
+{
+s:"🏫 학교",
+q:"피드백을 받았다.",
+l:"논리 분석",
+r:"감정 영향",
+type:"TF"
+},
+
+{
+s:"🏠 집",
+q:"쉬는 날 집에서",
+l:"밖으로 나가고 싶다",
+r:"집이 최고다",
+type:"EI"
+},
+
+{
+s:"🏠 집",
+q:"방 정리를 할 때",
+l:"정리 루틴",
+r:"그때그때",
+type:"JP"
+},
+
+{
+s:"🏠 집",
+q:"혼자 있는 시간",
+l:"실용적 활동",
+r:"상상/생각",
+type:"SN"
+},
+
+{
+s:"🏠 집",
+q:"감정이 흔들릴 때",
+l:"원인 분석",
+r:"감정 느끼기",
+type:"TF"
+},
+
+{
+s:"🏠 집",
+q:"집에서의 나",
+l:"활동적",
+r:"조용한 recharge",
+type:"EI"
+},
+
+{
+s:"🏠 집",
+q:"계획 없는 하루",
+l:"불안하다",
+r:"오히려 좋다",
+type:"JP"
+},
+
+{
+s:"⚡ 스트레스",
+q:"압박이 심할 때",
+l:"혼자 해결",
+r:"사람 찾기",
+type:"EI"
+},
+
+{
+s:"⚡ 스트레스",
+q:"문제가 생기면",
+l:"논리적 대응",
+r:"감정적 반응",
+type:"TF"
+},
+
+{
+s:"⚡ 스트레스",
+q:"불확실한 상황",
+l:"현재 사실 확인",
+r:"가능성 상상",
+type:"SN"
+},
+
+{
+s:"⚡ 스트레스",
+q:"마감 직전",
+l:"정리하고 끝냄",
+r:"즉흥 몰입",
+type:"JP"
+},
+
+{
+s:"⚡ 스트레스",
+q:"스트레스 해소법",
+l:"사람 만나기",
+r:"혼자 있기",
+type:"EI"
+},
+
+{
+s:"⚡ 스트레스",
+q:"압박 속 나는",
+l:"냉정해짐",
+r:"예민해짐",
+type:"TF"
+}
+
+];
+
+let i=0;
+let answers=[];
+
+function load(){
+
+let q=questions[i];
+
+situation.innerText=`${q.s} | ${i+1}/${questions.length}`;
+
+question.innerText=q.q;
+
+left.innerText=q.l;
+right.innerText=q.r;
+
+progress.style.width=
+((i/questions.length)*100)+"%";
+
+}
+
+load();
+
+function nextQ(){
+
+answers[i]=slider.value;
+
+if(i<questions.length-1){
+
+i++;
+load();
+
+}
+
+else{
+
+showResult();
+
+}
+
+}
+
+function prevQ(){
+
+if(i>0){
+
+i--;
+load();
+
+}
+
+}
+
+function showResult(){
+
+quiz.style.display="none";
+
+let html="";
+
+const results=[
+
+{
+mbti:"ISTP",
+poem:"얼음 속 숨겨둔 모닥불",
+color:"linear-gradient(135deg,#18c9c7,#ffd45c)"
+},
+
+{
+mbti:"ENFP",
+poem:"폭죽이 터진 여름밤 오렌지 소다",
+color:"linear-gradient(135deg,#ff8b5d,#ffd86b)"
+},
+
+{
+mbti:"INTJ",
+poem:"눈 내리는 도서관의 은빛 나침반",
+color:"linear-gradient(135deg,#7589ff,#d9d9d9)"
+},
+
+{
+mbti:"INFP",
+poem:"비 오는 새벽의 라벤더 숨결",
+color:"linear-gradient(135deg,#8b74ff,#ffc9e4)"
+}
+
+];
+
+results.forEach(r=>{
+
+html+=`
+
+<div class="resultCard"
+style="background:${r.color}">
+
+<h2>${r.mbti}</h2>
+
+<div class="poem">
+"${r.poem}"
+</div>
+
+<p>
+
+당신은 하나의 유형으로 설명되지 않습니다.
+상황마다 다른 온도와 색을 가진 사람입니다.
+
+</p>
+
+</div>
+
+`;
+
+});
+
+result.innerHTML=`
+
+<h1 style="margin-bottom:25px;">
+당신의 알록달록한 결과 ✦
+</h1>
+
+${html}
+
+`;
+
+result.style.display="block";
+
+}
+
+</script>
+
+</body>
+</html>
